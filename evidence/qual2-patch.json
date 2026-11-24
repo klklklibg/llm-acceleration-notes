@@ -1,0 +1,17 @@
+{
+  "label": "patch",
+  "gens": [
+    {
+      "prompt": "请解释为什么天空是蓝色的，以及为什么日落时天空会变红。分步骤说明，包含瑞利散射，至少300字。",
+      "content": "",
+      "reasoning": "The user is asking me to explain why the sky is blue and why the sky turns red during sunset. They want a step-by-step explanation that includes Rayleigh scattering, and at least 300 words. This is in Chinese.\n\nLet me think about the physics here:\n\n1. Why is the sky blue?\n- Sunlight contains all colors of visible light (white light)\n- When sunlight enters the atmosphere, it interacts with gas molecules\n- Rayleigh scattering occurs when light interacts with particles much smaller than the wavelength of light\n- Rayleigh scattering is inversely proportional to the fourth power of wavelength (1/λ⁴)\n- Blue light has a shorter wavelength (~450nm) compared to red light (~650nm)\n- Therefore blue light is scattered much more than red light\n- The scattered blue light reaches our eyes from all directions, making the sky appear blue\n\n2. Why does the sky turn red at sunset?\n- During sunset, the sun is near the horizon\n- Sunlight has to travel through a much thicker portion of the atmosphere\n- More of the blue and green light is scattered away before reaching our eyes\n- The remaining light that reaches our eyes is dominated by longer wavelengths (red, orange)\n- This makes the sun and sky appear red/orange\n\nLet me structure this step by step and make sure to include Rayleigh scattering. I'll write this in Chinese since the question is in",
+      "n_gen": 300
+    },
+    {
+      "prompt": "用中文写一段200字的自我介绍，要求包含姓名、职业、爱好三部分。",
+      "content": "大家好！我叫张明，今年28岁，目前在一家公司担任软件工程师。我的工作主要是开发和维护各类应用程序，喜欢用代码解决实际问题，也在不断学习中提升技术能力。\n\n在工作之余，我有着丰富的兴趣爱好。首先，我热爱运动，尤其是篮球和跑步，每周都会抽出时间锻炼身体，这让我保持充沛的精力。其次，我喜欢阅读，尤其是科技类和历史类的书籍，读书让我开阔视野、沉淀思考。此外，我也偏爱摄影，喜欢用镜头记录生活中的美好瞬间，无论是风景还是日常点滴，都能给我带来惊喜与感动。\n\n我性格开朗、待人真诚，期待与朋友们互相交流、共同成长。谢谢大家！",
+      "reasoning": "The user is asking me to write a self-introduction in Chinese, about 200 characters, that includes three parts: name, profession, and hobbies.\n\nLet me write a natural, well-structured self-introduction in Chinese that includes all three required elements.\n\nI'll create a plausible self-introduction. Since this is a template/example, I'll use a common profession and hobbies that make sense.\n\nLet me write around 200 characters (Chinese characters count differently than words).\n",
+      "n_gen": 240
+    }
+  ]
+}

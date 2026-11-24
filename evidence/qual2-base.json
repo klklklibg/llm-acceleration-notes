@@ -1,0 +1,17 @@
+{
+  "label": "base",
+  "gens": [
+    {
+      "prompt": "请解释为什么天空是蓝色的，以及为什么日落时天空会变红。分步骤说明，包含瑞利散射，至少300字。",
+      "content": "",
+      "reasoning": "The user is asking me to explain why the sky is blue and why the sky turns red at sunset. They want a step-by-step explanation that includes Rayleigh scattering, and at least 300 words. This is in Chinese.\n\nLet me think about the physics here:\n\n1. Why is the sky blue?\n- Sunlight contains all colors of visible light (white light)\n- When sunlight enters the atmosphere, it interacts with gas molecules\n- Rayleigh scattering occurs when light interacts with particles much smaller than the wavelength of light\n- Rayleigh scattering is wavelength-dependent: the scattering intensity is inversely proportional to the fourth power of wavelength (1/λ⁴)\n- Blue light has a shorter wavelength (~450nm) than red light (~650nm)\n- So blue light is scattered much more strongly than red light\n- This scattered blue light reaches our eyes from all directions, making the sky appear blue\n\n2. Why does the sky turn red at sunset?\n- At sunset, the sun is near the horizon\n- Sunlight has to travel through a much thicker layer of atmosphere compared to when the sun is overhead\n- Because of the longer path, more of the blue and green light is scattered away\n- The remaining light that reaches our eyes is dominated by longer wavelengths (red, orange)\n- This makes the sun and sky appear red/orange\n\nLet me structure this step by step and make sure to include",
+      "n_gen": 300
+    },
+    {
+      "prompt": "用中文写一段200字的自我介绍，要求包含姓名、职业、爱好三部分。",
+      "content": "大家好！我叫李明，今年28岁，目前在某科技公司担任软件工程师。我的日常工作主要是开发和维护应用程序，虽然有时比较忙碌，但我乐在其中——每当解决一个难题，都会让我充满成就感。",
+      "reasoning": "The user is asking me to write a self-introduction in Chinese, about 200 characters, that includes three parts: name, occupation, and hobbies.\n\nLet me write a natural, well-structured self-introduction in Chinese that includes all three required elements.\n\nI'll create a sample self-introduction. Since this is a template/example request, I'll write a plausible one. Let me aim for around 200 characters.\n\nLet me draft this:\n\n大家好！我叫李明，今年28岁，目前在一家公司担任软件工程师。我的工作主要是开发和维护应用程序，虽然有时比较忙碌，但我乐在其中，因为解决问题带来的成就感让我感到充实。\n\n在工作之余，我有着丰富的爱好。我喜欢跑步，每周都会去公园锻炼，这不仅让我保持健康，还能让我放松身心。此外，我也热爱阅读，尤其喜欢科幻小说，它们为我打开了想象的世界。周末时，我还喜欢和朋友一起爬山、摄影，记录生活中的美好瞬间。\n\n这就是我，一个热爱生活、积极向上的年轻人。希望能和大家成为朋友！\n\nLet me count the characters roughly. This should be around 200 characters. Let me refine it.\n\nActually, let me make sure it's around 200 characters and flows well.\n",
+      "n_gen": 300
+    }
+  ]
+}

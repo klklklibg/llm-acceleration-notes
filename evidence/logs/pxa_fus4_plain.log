@@ -1,0 +1,423 @@
+ggml_cuda_init: GGML_CUDA_FORCE_MMQ:    no
+ggml_cuda_init: GGML_CUDA_FORCE_CUBLAS: no
+ggml_cuda_init: found 1 CUDA devices:
+  Device 0: Tesla P100-PCIE-16GB, compute capability 6.0, VMM: no, VRAM: 16287 MiB
+PXA config level: ENHANCE (default; PXA_ENHANCE=0 for DEFAULT, PXA_REFERENCE=1 for REFERENCE)
+PXA level=ENHANCE | dev0 Tesla P100-PCIE-16GB(sm_60): FP16_GEMM ON [2:1 hgemm] MASK_SKIP_TILE ON [bit-exact] FA_TILE_F32ACC ON [fp32 acc, not bit-exact vs f16 acc] | mode=balance [fa-on serving]
+pxqn: loaded D:/pxa/engine/bin/libggml-pxqn.so (libggml-pxqn unknown cpu=avx2)
+PXA_REGISTRY: 1059 levers declared (245 default-on, 95 by rule); level ENHANCE; 1 card(s): sm_60 [cuda]; model arch=qwen35moe tier=PXQ2 experts=256 kv_heads=2
+PXA_REGISTRY: -fa on       [USER] given on the command line
+PXA_REGISTRY: -sm layer    [RULE] 1 card: a tensor split needs two
+PXA_REGISTRY: PXA_DN_CONVFUSE off      [MEASURED] no tensor split: the fused delta-net conv cluster measured -31% (1x V100) / -21% (1x P100) decode; PXA_DN_CONVFUSE=1 puts it back
+PXA_REGISTRY: PXA_PF_STABLE_SHAPE on       [MEASURED] qwen35moe on sm_60: one graph shape for every prompt ubatch (no scheduler re-plan per batch): 2x P100 35B pp16384 1150.6 -> 1569.7 t/s, sha identical; PXA_PF_STABLE_SHAPE=0 keeps the fused 1-row gate
+PXA_REGISTRY: -ngl (yours)  [USER] given on the command line
+PXA_REGISTRY: -b  (yours)  [USER] given on the command line
+PXA_REGISTRY: -ub (yours)  [USER] given on the command line
+PXA_REGISTRY: -c  (yours)  [USER] given on the command line
+PXA_REGISTRY: -ctk (yours)  [OFF] no measured KV pick for this model/card: the engine default f16 is kept
+PXA_REGISTRY: -ctv (yours)  [OFF] no measured KV pick for this model/card: the engine default f16 is kept
+PXA_REGISTRY: env PXA_DN_CONVFUSE=0 (set by the -sm pick)
+PXA_REGISTRY: env PXA_PF_STABLE_SHAPE=1 (set by the -sm pick)
+PXA posture: mode=balance [fa-on serving, decode-first] fa=on (explicit) ub=512 (explicit CLI/env - ub untouched)
+PXA_AUTO: samplers arch=qwen35moe -> temp=0.70 top_k=20 top_p=0.80 min_p=0.00 (qwen no-think agent defaults (official Qwen no-think sampler set); override: the CLI flag or PXA_AUTO_SAMPLERS=0)
+PXA_AUTO: spec VRAM gate OK -- dev0 free 16020 MiB, model share 10722 MiB (uniform split; whole file (-ngl 99 covers all 41 blocks)) -> headroom 5297 MiB (at or above the 2048 MiB a draft context needs)
+PXA_AUTO: spec arch=qwen35moe -> --spec-type ngram-mod:n_max=4,n_min=2 (measured +23.0% first-request decode on code traffic (24.44->30.05 t/s, 4xP100 122B PXQU48-core), +4.6% on prose, prefill-neutral; drafts only on an n-gram match so it costs ~nothing when it cannot predict, unlike mtp which drafts unconditionally and measured -8.6% on this model; gain scales with how repetitive the OUTPUT is -- high on code/tool traffic, much lower on prose; override --spec-type or PXA_AUTO_SPEC=0)
+PXA_SPEC: stage chain = ngram_mod
+PXA_SPEC: self-spec stage ngram_mod: n_max=4, n_min=2, ngram_size_n=12, ngram_size_m=48, ngram_min_hits=1 -- it drafts ONLY on a match, and n_min is the floor below which a weak match falls through to the next stage instead of being verified
+PXA_SPEC_SAMPLED: ON -- lossless speculative sampling at temp>0: the drafter DRAWS each draft token from its own distribution under this request's filter chain, the verifier accepts it with probability min(1, p/q) and resamples normalise(max(p-q,0)) on a rejection, so the emitted token is distributed exactly as an unspeculated request's would be. Overrides PXA_SPEC_RELAXED where it applies; falls back to exact matching at temp 0, under a grammar/mirostat/adaptive-p/dynamic-temperature request, and for any drafted token that carries no distribution
+PXA_SPEC_RELAXED: OFF -- exact-match draft acceptance at every temperature
+PXA_SPEC_BATCH_FIDELITY: a verify step computes its logits at batch width M = 1 + n_draft, a plain decode at width 1, and the two use different kernels and summation orders -- so at a near-tie the greedy pick can differ from a drafter-off run. Speculative output is NOT byte-reproducible at temperature 0: gate it on fidelity (top-1 agreement / KLD), not on a repeated-output checksum, and run a drafter-off server when you need byte-identical results
+PXA_SPEC_ADAPTIVE_LOAD: OFF (default) -- the configured draft depth is used at every concurrency level. This was ON by default on 2026-09-10 and reverted 2026-09-11: the +37% four-client number it was flipped on did not reproduce, and the arms' own controls drift 17-20%, so a delta that size is not resolvable at n=5. PXA_SPEC_ADAPTIVE_LOAD=1 re-arms it (the mechanism is intact and depth-only)
+PXA_MTP_DRAFT_CACHE_ONLY: OFF (default) -- the MTP prompt catch-up runs the full draft graph (PXA_MTP_DRAFT_CACHE_ONLY=1 for the K/V-only one)
+PXA_CKPT_EVICT: structural (default) -- spacing-only eviction; replay hits are counted but not used (PXA_CKPT_EVICT=value to weight by them)
+PXA_CONTAINER_AWARE_v1: runtime=bare-metal (windows: no container detection implemented, assuming bare metal)
+INFO [                    main] build info | tid="22976" timestamp=1795432736 build=10912 commit="e37f292792"
+INFO [                    main] system info | tid="22976" timestamp=1795432736 n_threads=6 n_threads_batch=-1 total_threads=12 system_info="AVX = 1 | AVX_VNNI = 0 | AVX2 = 1 | AVX512 = 0 | AVX512_VBMI = 0 | AVX512_VNNI = 0 | AVX512_BF16 = 0 | FMA = 1 | NEON = 0 | SVE = 0 | ARM_FMA = 0 | F16C = 1 | FP16_VA = 0 | WASM_SIMD = 0 | BLAS = 1 | SSE3 = 1 | SSSE3 = 1 | VSX = 0 | MATMUL_INT8 = 0 | "
+CUDA0: using device CUDA0 - 16020 MiB free
+llama_model_loader: loaded meta data with 47 key-value pairs and 753 tensors from D:/pxa/models/PXA-Fusion4-35B-PXQ2.gguf (version GGUF V3 (latest))
+llama_model_loader: PXQ content detected (pxq2) -- the repetition guard auto-arms at ENHANCE only for PXQ1 / PXQN1-heavy files (since 2026-07-30; PXA_REP_GUARD=1 forces any-PXQ, =0 disables)
+llama_model_loader: Dumping metadata keys/values. Note: KV overrides do not apply in this output.
+llama_model_loader: - kv   0:                       general.architecture str              = qwen35moe
+llama_model_loader: - kv   1:                               general.type str              = model
+llama_model_loader: - kv   2:                         general.size_label str              = 256x2.6B
+llama_model_loader: - kv   3:                            general.license str              = apache-2.0
+llama_model_loader: - kv   4:                   general.base_model.count u32              = 1
+llama_model_loader: - kv   5:                  general.base_model.0.name str              = Qwable v1
+llama_model_loader: - kv   6:               general.base_model.0.version str              = v1
+llama_model_loader: - kv   7:          general.base_model.0.organization str              = Lordx64
+llama_model_loader: - kv   8:              general.base_model.0.repo_url str              = https://huggingface.co/lordx64/Qwable-v1
+llama_model_loader: - kv   9:                               general.tags arr[str,8]       = ["abliterated", "uncensored", "hereti...
+llama_model_loader: - kv  10:                      qwen35moe.block_count u32              = 41
+llama_model_loader: - kv  11:                   qwen35moe.context_length u32              = 262144
+llama_model_loader: - kv  12:                 qwen35moe.embedding_length u32              = 2048
+llama_model_loader: - kv  13:             qwen35moe.attention.head_count u32              = 16
+llama_model_loader: - kv  14:          qwen35moe.attention.head_count_kv u32              = 2
+llama_model_loader: - kv  15:          qwen35moe.rope.dimension_sections arr[i32,4]       = [11, 11, 10, 0]
+llama_model_loader: - kv  16:                   qwen35moe.rope.freq_base f32              = 10000000.000000
+llama_model_loader: - kv  17: qwen35moe.attention.layer_norm_rms_epsilon f32              = 0.000001
+llama_model_loader: - kv  18:                     qwen35moe.expert_count u32              = 256
+llama_model_loader: - kv  19:                qwen35moe.expert_used_count u32              = 8
+llama_model_loader: - kv  20:             qwen35moe.attention.key_length u32              = 256
+llama_model_loader: - kv  21:           qwen35moe.attention.value_length u32              = 256
+llama_model_loader: - kv  22:       qwen35moe.expert_feed_forward_length u32              = 512
+llama_model_loader: - kv  23: qwen35moe.expert_shared_feed_forward_length u32              = 512
+llama_model_loader: - kv  24:                  qwen35moe.ssm.conv_kernel u32              = 4
+llama_model_loader: - kv  25:                   qwen35moe.ssm.state_size u32              = 128
+llama_model_loader: - kv  26:                  qwen35moe.ssm.group_count u32              = 16
+llama_model_loader: - kv  27:               qwen35moe.ssm.time_step_rank u32              = 32
+llama_model_loader: - kv  28:                   qwen35moe.ssm.inner_size u32              = 4096
+llama_model_loader: - kv  29:          qwen35moe.full_attention_interval u32              = 4
+llama_model_loader: - kv  30:             qwen35moe.rope.dimension_count u32              = 64
+llama_model_loader: - kv  31:             qwen35moe.nextn_predict_layers u32              = 1
+llama_model_loader: - kv  32:                       tokenizer.ggml.model str              = gpt2
+llama_model_loader: - kv  33:                         tokenizer.ggml.pre str              = qwen35
+llama_model_loader: - kv  34:                      tokenizer.ggml.tokens arr[str,248320]  = ["!", "\"", "#", "$", "%", "&", "'", ...
+llama_model_loader: - kv  35:                  tokenizer.ggml.token_type arr[i32,248320]  = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, ...
+llama_model_loader: - kv  36:                      tokenizer.ggml.merges arr[str,247587]  = ["Ġ Ġ", "ĠĠ ĠĠ", "i n", "Ġ t",...
+llama_model_loader: - kv  37:                tokenizer.ggml.eos_token_id u32              = 248046
+llama_model_loader: - kv  38:            tokenizer.ggml.padding_token_id u32              = 248055
+llama_model_loader: - kv  39:                tokenizer.ggml.bos_token_id u32              = 248044
+llama_model_loader: - kv  40:               general.quantization_version u32              = 2
+llama_model_loader: - kv  41:                          general.file_type u32              = 38
+llama_model_loader: - kv  42:                               general.name str              = PXA-Fusion4-35B
+llama_model_loader: - kv  43:                           pxa.pxq2.version u32              = 1
+llama_model_loader: - kv  44:                              pxa.pxq2.book arr[f32,4]       = [-0.705566, -0.187622, 0.186768, 0.70...
+llama_model_loader: - kv  45:                               pxa.pxq2.sub arr[f32,16]      = [0.214722, 0.303467, 0.362061, 0.4089...
+llama_model_loader: - kv  46:                    tokenizer.chat_template str              = {%- set image_count = namespace(value...
+llama_model_loader: - type  f32:  308 tensors
+llama_model_loader: - type  f16:    2 tensors
+llama_model_loader: - type q8_0:   23 tensors
+llama_model_loader: - type mxfp4:  300 tensors
+llama_model_loader: - type pxq2:  120 tensors
+load: 0 unused tokens
+load: printing all EOG tokens:
+load:   - 248044 ('<|endoftext|>')
+load:   - 248046 ('<|im_end|>')
+load:   - 248063 ('<|fim_pad|>')
+load:   - 248064 ('<|repo_name|>')
+load:   - 248065 ('<|file_sep|>')
+load: special tokens cache size = 33
+load: token to piece cache size = 1.7581 MB
+llm_load_print_meta: format           = GGUF V3 (latest)
+llm_load_print_meta: arch             = qwen35moe
+llm_load_print_meta: n_ctx_train      = 262144
+llm_load_print_meta: n_embd           = 2048
+llm_load_print_meta: n_layer          = 41
+llm_load_print_meta: n_head           = 16
+llm_load_print_meta: n_head_kv        = 2
+llm_load_print_meta: n_rot            = 64
+llm_load_print_meta: n_swa            = 0
+llm_load_print_meta: n_swa_pattern    = 1
+llm_load_print_meta: n_embd_head_k    = 256
+llm_load_print_meta: n_embd_head_v    = 256
+llm_load_print_meta: n_gqa            = 8
+llm_load_print_meta: n_embd_k_gqa     = 512
+llm_load_print_meta: n_embd_v_gqa     = 512
+llm_load_print_meta: f_norm_eps       = 0.0e+00
+llm_load_print_meta: f_norm_rms_eps   = 1.0e-06
+llm_load_print_meta: f_clamp_kqv      = 0.0e+00
+llm_load_print_meta: f_max_alibi_bias = 0.0e+00
+llm_load_print_meta: f_logit_scale    = 0.0e+00
+llm_load_print_meta: n_ff             = 0
+llm_load_print_meta: n_expert         = 256
+llm_load_print_meta: n_expert_used    = 8
+llm_load_print_meta: causal attn      = 1
+llm_load_print_meta: pooling type     = 0
+llm_load_print_meta: rope type        = 40
+llm_load_print_meta: rope scaling     = linear
+llm_load_print_meta: freq_base_train  = 10000000.0
+llm_load_print_meta: freq_scale_train = 1
+llm_load_print_meta: n_ctx_orig_yarn  = 262144
+llm_load_print_meta: rope_finetuned   = unknown
+llm_load_print_meta: mrope sections   = [11, 11, 10, 0]
+llm_load_print_meta: ssm_d_conv       = 4
+llm_load_print_meta: ssm_d_inner      = 4096
+llm_load_print_meta: ssm_d_state      = 128
+llm_load_print_meta: ssm_dt_rank      = 32
+llm_load_print_meta: ssm_n_group      = 16
+llm_load_print_meta: model type       = 35B.A3B
+llm_load_print_meta: model ftype      = MXFP4 - 4.25 bpw
+llm_load_print_meta: model params     = 35.505 B
+llm_load_print_meta: model size       = 10.461 GiB (2.531 BPW) 
+llm_load_print_meta: repeating layers = 9.706 GiB (2.417 BPW, 34.488 B parameters)
+llm_load_print_meta: general.name     = PXA-Fusion4-35B
+print_info: vocab type            = BPE
+print_info: n_vocab               = 248320
+print_info: n_merges              = 247587
+print_info: BOS token             = 248044 '<|endoftext|>'
+print_info: EOS token             = 248046 '<|im_end|>'
+print_info: EOT token             = 248046 '<|im_end|>'
+print_info: PAD token             = 248055 '<|vision_pad|>'
+print_info: LF token              = 198 'Ċ'
+print_info: FIM PRE token         = 248060 '<|fim_prefix|>'
+print_info: FIM SUF token         = 248062 '<|fim_suffix|>'
+print_info: FIM MID token         = 248061 '<|fim_middle|>'
+print_info: FIM PAD token         = 248063 '<|fim_pad|>'
+print_info: FIM REP token         = 248064 '<|repo_name|>'
+print_info: FIM SEP token         = 248065 '<|file_sep|>'
+print_info: EOG token             = 248044 '<|endoftext|>'
+print_info: EOG token             = 248046 '<|im_end|>'
+print_info: EOG token             = 248063 '<|fim_pad|>'
+print_info: EOG token             = 248064 '<|repo_name|>'
+print_info: EOG token             = 248065 '<|file_sep|>'
+print_info: max token length      = 256
+PXA_AUTO: FA_D512_VOLTA=2 (ENHANCE; override PXA_FA_D512_VOLTA)
+PXA_AUTO: FA_D256_VOLTA_TILE=2 (ENHANCE; override PXA_FA_D256_VOLTA_TILE)
+PXA_AUTO: FA_D256_VOLTA_TILE_MINKV=1280 (ENHANCE; override PXA_FA_D256_VOLTA_TILE_MINKV)
+PXA_AUTO: FA_D256_VOLTA_TILE_MAXCOLS=8 (ENHANCE; override PXA_FA_D256_VOLTA_TILE_MAXCOLS)
+PXA_AUTO: FA_MMA_VOLTA=1 (ENHANCE; override PXA_FA_MMA_VOLTA)
+PXA_AUTO: FA_MMA_VOLTA_Q8=1 (ENHANCE; override PXA_FA_MMA_VOLTA_Q8)
+PXA_AUTO: FA_TILE_VOLTA=0 (ENHANCE; override PXA_FA_TILE_VOLTA)
+PXA_AUTO: FA_TILE256=1 (ENHANCE; override PXA_FA_TILE256)
+PXA_AUTO: FA_SM61_TILE256=1 (ENHANCE; override PXA_FA_SM61_TILE256)
+PXA_AUTO: FA_SWA_SLICE=0 (ENHANCE; override PXA_FA_SWA_SLICE)
+PXA_AUTO: FA_SWA_KEEP=1 (ENHANCE; override PXA_FA_SWA_KEEP)
+PXA_AUTO: SM60_FA_VEC_F32=1 (ENHANCE; override PXQ_SM60_FA_VEC_F32)
+PXA_AUTO: CORE_ROUTES=0 (ENHANCE; override PXA_CORE_ROUTES)
+PXA_AUTO: FA_QKV_DIRECT=1 (ENHANCE; override PXA_FA_QKV_DIRECT)
+PXA_AUTO: FA_QKV_TILE=1 (ENHANCE; override PXA_FA_QKV_TILE)
+PXA_AUTO: FA_QKV_DIRECT_VOLTA=1 (ENHANCE; override PXA_FA_QKV_DIRECT_VOLTA)
+PXA model=qwen35moe class=moe-hybrid-recurrent(deltanet) experts=256(top8) vocab=248320 mtp_head=yes mtp_active=no pxq_mmvq_tensors=0 pxq2_tensors=120 pxq3_tensors=0 | topology="single P100 (sm_60)" | level=ENHANCE
+PXA_AUTO: ROUTER_FUSE=0 (OFF: sm_60 present (+1.6% KILL measured on sm_60); override PXA_ROUTER_FUSE)
+PXA_AUTO: FUSE_DELTANET=55 (deltanet hybrid arch — cluster + row-absorb fusions active (bit-exact with eager; out-gate fusion off by default, guarded, see pxa/README.md); override PXA_FUSE_DELTANET)
+PXA_AUTO: PXQ_MMVQ=0 (OFF: model carries no tier this path is allowed to decode; override PXA_PXQ_MMVQ)
+PXA_AUTO: PXQ23_MMVQ=0 (OFF: the low tiers keep their bespoke fused decode kernels; override PXA_PXQ23_MMVQ)
+PXA_PXQ_MMV_H2: mode 3 (PXQ2/PXQ3 dense decode via the half2 pair-LUT loop, sm_60 only — NOT bit-exact vs the fp32 mmv, fidelity-gated; the fp16-exact book self-check runs at first dispatch)
+PXA_AUTO: PXQ_MMV_H2=3 (PXQ2 and PXQ3 dense decode on the half2 pair-LUT loop (sm_60 devices only); override PXA_PXQ_MMV_H2)
+PXA_AUTO: VOLTA_CUBLAS_NE11=64 (INERT: no sm_70 device; override PXA_VOLTA_CUBLAS_NE11)
+PXA_AUTO: P100_FP16_GEMM=on (sm_60 present: GP100 2:1 fp16 hgemm on dense GEMMs (+51% gpt-oss prefill measured); sm_61 excluded (1:64 fp16); override PXA_P100_FP16_GEMM)
+PXA_AUTO: FA_MASK_SKIP_TILE=on (sm_60 present: bit-identical by construction; engages on fully-masked KV tiles (np2 co-resident slots); override PXA_FA_MASK_SKIP_TILE)
+PXA_AUTO: FA_TILE_F32ACC=on (sm_60 present: fp32 kqmax/kqsum/VKQ running state in the tile-f16 FA kernel; a CORRECTNESS fix, not a speed lever (the f16 accumulator's rounding depended on band placement) -- PXA_FA_TILE_F32ACC=0 restores the f16 path for an A/B; override PXA_FA_TILE_F32ACC)
+PXA_AUTO: INT8_PREFILL=1 (INERT: dispatch ship-gate is cc==610 and no sm_61 device is present; override PXA_PXQ_INT8_PREFILL)
+PXA_AUTO: PXQ_GEMM_2D=0 (OFF: MoE model — post-coalescing sm_60 MoE cell unmeasured; override PXA_PXQ_GEMM_2D)
+PXA_AUTO: house levers KQ_MASK_PAD1 KV_SEQ_SOA TOPK_RAW TOPK_MOE_MULTIROW GETROWS_NARROW CPY_FASTDIV CONCAT_FLAT NORM_REGCACHE SCHED_RESET_LAZY = on (ENHANCE level default; host-side / index-math, arch-independent; override each PXA_<NAME>)
+PXA_AUTO: FA_GQA_PACK=0 (OFF: not a multi-card sm_60 topology, or level below ENHANCE — the pack width was measured on the 4x P100 seat only; override PXA_FA_GQA_PACK)
+PXA_AUTO: MOE_DEVICE_MAP=0 (OFF: not a measured topology/architecture for this lever, or level below ENHANCE; override PXA_MOE_DEVICE_MAP)
+PXA_AUTO: SPEC_1ROW=on SPEC_RELAXED=off (spec lanes; measured no-op when no spec decode runs)
+PXA_AUTO: MTP model — PXA_MTP_LAZY_WARMUP defaults ON under ENHANCE (bit-identical, +12% then +47% 35B prefill measured; resolver lives in src/llama.cpp + server-context.cpp; override PXA_MTP_LAZY_WARMUP=0)
+pxa: engine | codec=PXQ2 (120 tensors; pxq2 120, pxq3 0, pxq4 0, pxq6 0)
+pxa: dev 0 Tesla P100-PCIE-16GB cc 6.0 -> path: sm_60 fp16-hfma2
+======================================= HAVE_FANCY_SIMD is NOT defined
+------------------- Layer sizes:
+Layer  0:    238.31,      2.09,    240.40       56.00  MiB
+Layer  1:    238.31,      2.09,    240.40       56.00  MiB
+Layer  2:    238.31,      2.09,    240.40       56.00  MiB
+Layer  3:    235.99,     32.00,    267.99       56.00  MiB
+Layer  4:    238.31,      2.09,    240.40       56.00  MiB
+Layer  5:    238.31,      2.09,    240.40       56.00  MiB
+Layer  6:    238.31,      2.09,    240.40       56.00  MiB
+Layer  7:    235.99,     32.00,    267.99       56.00  MiB
+Layer  8:    238.31,      2.09,    240.40       56.00  MiB
+Layer  9:    238.31,      2.09,    240.40       56.00  MiB
+Layer 10:    238.31,      2.09,    240.40       56.00  MiB
+Layer 11:    235.99,     32.00,    267.99       56.00  MiB
+Layer 12:    238.31,      2.09,    240.40       56.00  MiB
+Layer 13:    238.31,      2.09,    240.40       56.00  MiB
+Layer 14:    238.31,      2.09,    240.40       56.00  MiB
+Layer 15:    235.99,     32.00,    267.99       56.00  MiB
+Layer 16:    238.31,      2.09,    240.40       56.00  MiB
+Layer 17:    238.31,      2.09,    240.40       56.00  MiB
+Layer 18:    238.31,      2.09,    240.40       56.00  MiB
+Layer 19:    235.99,     32.00,    267.99       56.00  MiB
+Layer 20:    238.31,      2.09,    240.40       56.00  MiB
+Layer 21:    238.31,      2.09,    240.40       56.00  MiB
+Layer 22:    238.31,      2.09,    240.40       56.00  MiB
+Layer 23:    235.99,     32.00,    267.99       56.00  MiB
+Layer 24:    238.31,      2.09,    240.40       56.00  MiB
+Layer 25:    238.31,      2.09,    240.40       56.00  MiB
+Layer 26:    238.31,      2.09,    240.40       56.00  MiB
+Layer 27:    235.99,     32.00,    267.99       56.00  MiB
+Layer 28:    238.31,      2.09,    240.40       56.00  MiB
+Layer 29:    238.31,      2.09,    240.40       56.00  MiB
+Layer 30:    238.31,      2.09,    240.40       56.00  MiB
+Layer 31:    235.99,     32.00,    267.99       56.00  MiB
+Layer 32:    238.31,      2.09,    240.40       56.00  MiB
+Layer 33:    238.31,      2.09,    240.40       56.00  MiB
+Layer 34:    238.31,      2.09,    240.40       56.00  MiB
+Layer 35:    235.99,     32.00,    267.99       56.00  MiB
+Layer 36:    238.31,      2.09,    240.40       56.00  MiB
+Layer 37:    238.31,      2.09,    240.40       56.00  MiB
+Layer 38:    238.31,      2.09,    240.40       56.00  MiB
+Layer 39:    235.99,     32.00,    267.99       56.00  MiB
+Layer 40:      0.00,     32.00,     32.00        4.00  MiB
+Layer 41:    515.31,    429.00,    944.31 MiB (output layer)
+--------------------------------------------------------------------------
+Total   :   9509.22,    843.81,  10353.03 MiB
+Memory required for model tensors + cache: 10868 MiB
+Memory available on all devices - compute: 14940 MiB
+PXA_XCACHE: cold path = cpu (CPU reads pinned experts for narrow graphs) (auto: expert types have a CPU matmul)
+PXA_PLACE: auto -> resident (0 tensors, 0.00 GiB)
+PXA_PLACE: dev0 fits resident (11094 of 16020 MiB)
+PXA_PLACE_JSON: {"mode":"resident","cpu_instead":false,"streamed_mib":0.0,"tensors":0,"devices":[{"stream_mib":0.0,"ring_mib":0.0,"short_mib":0.0}],"reason":"dev0 fits resident (11094 of 16020 MiB)"}
+llm_load_tensors: ggml ctx size =    0.64 MiB
+model has unused tensor blk.40.attn_norm.weight (size = 8192 bytes) -- ignoring
+model has unused tensor blk.40.post_attention_norm.weight (size = 8192 bytes) -- ignoring
+model has unused tensor blk.40.attn_q.weight (size = 8912896 bytes) -- ignoring
+model has unused tensor blk.40.attn_k.weight (size = 1114112 bytes) -- ignoring
+model has unused tensor blk.40.attn_v.weight (size = 1114112 bytes) -- ignoring
+model has unused tensor blk.40.attn_output.weight (size = 4456448 bytes) -- ignoring
+model has unused tensor blk.40.attn_q_norm.weight (size = 1024 bytes) -- ignoring
+model has unused tensor blk.40.attn_k_norm.weight (size = 1024 bytes) -- ignoring
+model has unused tensor blk.40.ffn_gate_inp.weight (size = 1048576 bytes) -- ignoring
+model has unused tensor blk.40.ffn_up_exps.weight (size = 142606336 bytes) -- ignoring
+model has unused tensor blk.40.ffn_gate_exps.weight (size = 142606336 bytes) -- ignoring
+model has unused tensor blk.40.ffn_down_exps.weight (size = 142606336 bytes) -- ignoring
+model has unused tensor blk.40.ffn_gate_inp_shexp.weight (size = 4096 bytes) -- ignoring
+model has unused tensor blk.40.ffn_gate_shexp.weight (size = 557056 bytes) -- ignoring
+model has unused tensor blk.40.ffn_up_shexp.weight (size = 557056 bytes) -- ignoring
+model has unused tensor blk.40.ffn_down_shexp.weight (size = 557056 bytes) -- ignoring
+model has unused tensor blk.40.nextn.eh_proj.weight (size = 4456448 bytes) -- ignoring
+model has unused tensor blk.40.nextn.enorm.weight (size = 8192 bytes) -- ignoring
+model has unused tensor blk.40.nextn.hnorm.weight (size = 8192 bytes) -- ignoring
+model has unused tensor blk.40.nextn.shared_head_norm.weight (size = 8192 bytes) -- ignoring
+llm_load_tensors: PXA_HOST_RESIDENT: 257.66 MiB of host weights copied into CUDA_Host at load instead of read from the file mapping (no page faults under memory pressure; PXA_HOST_RESIDENT=0 keeps the mapping)
+llm_load_tensors: offloading 41 repeating layers to GPU
+llm_load_tensors: offloading non-repeating layers to GPU
+llm_load_tensors: offloaded 42/42 layers to GPU
+llm_load_tensors:        CPU buffer size =   257.66 MiB
+llm_load_tensors:      CUDA0 buffer size = 10024.54 MiB
+...............................................................................................
+llama_init_from_model: n_ctx         = 16384
+llama_init_from_model: n_batch       = 1024
+llama_init_from_model: n_ubatch      = 512
+llama_init_from_model: flash_attn    = 1
+llama_init_from_model: attn_max_b    = 0
+llama_init_from_model: fused_moe     = 1
+llama_init_from_model: grouped er    = 0
+llama_init_from_model: fused_up_gate = 1
+llama_init_from_model: fused_mmad    = 1
+llama_init_from_model: rope_cache    = 0
+llama_init_from_model: graph_reuse   = 1
+llama_init_from_model: k_cache_hadam = 0
+llama_init_from_model: v_cache_hadam = 0
+llama_init_from_model: split_mode_graph_scheduling = 0
+llama_init_from_model: reduce_type   = f16
+llama_init_from_model: sched_async   = 0
+llama_init_from_model: ser           = -1, 0
+llama_init_from_model: freq_base     = 10000000.0
+llama_init_from_model: freq_scale    = 1
+llama_kv_cache_init:      CUDA0 KV buffer size =   383.12 MiB
+llama_kv_cache_init: PXA_KV_BAND_VPAD: 10 of 10 f16 V caches padded (16384 cells each)
+llama_init_from_model: KV self size  =  320.00 MiB, K (f16):  160.00 MiB, V (f16):  160.00 MiB
+llama_init_from_model:        CPU  output buffer size =     0.95 MiB
+llama_init_from_model: PXA_DN_SHARE_INPUTS: ON (auto, n_seq_max = 1)
+llama_init_from_model: PXA_PIPELINE_PP=1 but pipeline parallelism stays off (devices=1, ngl=99/41, split_mode=1, offload_kqv=1, overrides=0 get_rows_only=1, arch=qwen35moe)
+llama_init_from_model:      CUDA0 compute buffer size =   489.01 MiB
+llama_init_from_model:  CUDA_Host compute buffer size =    21.02 MiB
+llama_init_from_model: graph nodes  = 2619
+llama_init_from_model: graph splits = 2
+pxa_reserve_real_graph: reserved the real-path graph at n_tokens = 512, n_kv = 16384 (nodes = 2619, n_outputs = 0, token batch, reserve #1 on this context)
+pxa_reserve_real_graph:      CUDA0 compute buffer size =   489.01 MiB
+pxa_reserve_real_graph:        CPU compute buffer size =    21.02 MiB
+pxa_pool_pregrow: device 0: GEMM temporary pool pre-grown to 0.0 MiB for 512-token ubatches (worst case 42.0 MiB), 5085.2 MiB left free
+llama_init_from_model: PXA_KQ_MASK_PAD1 build present; mode = 2 (0=off 1=trim decode KQ_mask H2D to row 0 2=+skip host pad fill)
+llama_init_from_model: enabling only_active_experts scheduling
+PXA_AUTO: MTP_LAZY_WARMUP=1 (ENHANCE default; bit-identical; override PXA_MTP_LAZY_WARMUP=0)
+PXA_KQ_MASK_PAD1 fired: n=1 tensor=KQ_mask full=8192 copied=512 saved_total=7680
+PXA_GLM_KDA_FUSE=3: glm5next KDA glue fusion armed (gate chain + out-gate; bit-exact, pattern-matched)
+PXA_PXQ2 fused kernels: ON (LM4 self-check PASS; PXA_PXQ2=0 disables)
+PXA_PXQ6_KSPLIT_GEN: S=4 (sm_60/70 decode default; env overrides)
+PXA_PXQ_MMVQ_FUGSPLIT dev0: OFF (dense PXQ up/gate decode = fused twin) [auto: sm_70+]
+PXA_KQMMV dev0 (cc 600): ON, path h2 [auto: sm_60] (Q4_K/Q5_K/Q6_K/Q8_0 decode GEMV ny<=8; group on, gate/up fused)
+PXA_KQMMV dev0: FIRING group (q8_0, ny=1, K=2048, 2 matrix(es), 1024 rows, h2 path)
+PXA_FA_GQA_PACK: NH=0 (OFF — stock one-block-per-head vec kernel)
+PXA_FA_GQA_QSMEM: OFF (Q staged in shared for NH=4/8)
+PXA_FA_VEC_ILP: ON (D=256 decode V-pass 4-way ILP; PXA_FA_VEC_ILP=0 reverts)
+PXA_KQMMV_S1 dev0: FIRING (type 8, h2, ny=1, K=2048, 1 matrix(es), 248320 rows)
+PXA_KQMMV dev0: FIRING single (q8_0, ny=1, K=2048, 1 matrix(es), 248320 rows, h2 path)
+INFO [                    init] initializing slots | tid="22976" timestamp=1795432749 n_slots=1 kv_unified=false n_ctx=16384 n_ctx_slot=16384
+INFO [                    init] prompt/decode interleave | tid="22976" timestamp=1795432749 PXA_INTERLEAVE_DECODE_MS=1000
+INFO [                    init] new slot | tid="22976" timestamp=1795432749 id_slot=0 n_ctx_slot=16384
+srv          init: Exclude reasoning tokens when selecting slot based on similarity: start: <think>, end: </think>
+use `--reasoning-tokens none` to disable.
+pxa_gslot_new_verify: PXA_VERIFY_GRAPH_CACHE: graph slot for verify width 2 created
+PXA_F32_VERIFY_COLSPLIT: FIRING (blk.0.ffn_gate_inp.weight 2048x256 f32, 2 columns -> one-column cuBLAS calls; =0 off)
+common_speculative_init: recurrent checkpoint budget: the chain drafts up to 4 tokens (capacity 5), this context can checkpoint 5 -> effective n_max = 4
+common_speculative_init: initialized ngram_mod with n=12, size=4194304 (16.000 MB)
+common_speculative_init: ngram_mod n=12 is too small - poor quality is possible, see: https://github.com/ggml-org/llama.cpp/pull/19164
+per_step_alloc:      CUDA0 per-step buffer =   254.06 MiB (max_tokens=5)
+checkpoint_alloc_shadows:      CUDA0 shadow buffer =     2.81 MiB (conv-state only)
+llama_spec_ckpt_init: fixed recurrent checkpoint mode = per-step (max_tokens=5)
+common_speculative_init: PXA_SPEC_SELECT: not armed (the chain has a stage the selector does not drive)
+slot         init: id  0 | task -1 | speculative decoding context initialized
+context checkpoints: 32 per slot (free RAM cannot be read here, so the default stands; --ctx-checkpoints N to override) []
+prompt cache is off by default for a model with recurrent state (bug seat-ram-prompt-cache-degrades-hybrid) - pass `--cache-ram N` to enable it
+prompt cache is disabled - use `--cache-ram N` to enable it
+init: chat template, example_format: '<|im_start|>system
+You are a helpful assistant<|im_end|>
+<|im_start|>user
+Hello<|im_end|>
+<|im_start|>assistant
+Hi there<|im_end|>
+<|im_start|>user
+How are you?<|im_end|>
+<|im_start|>assistant
+<think>
+'
+INFO [                    main] model loaded | tid="22976" timestamp=1795432749
+INFO [                    main] pxa: file: codec=PXQ2 bpw=2.53 backbone_rev=n/a source=n/a | tid="22976" timestamp=1795432749
+INFO [                    main] pxa speed stats on | tid="22976" timestamp=1795432749 capacity=10000 loaded=0 file="(memory only)"
+INFO [                    main] HTTP server listening | tid="22976" timestamp=1795432749 hostname="127.0.0.1" port="8085" n_threads_http="11"
+INFO [                    main] PXA_WEDGE_EXIT_v1 armed | tid="22976" timestamp=1795432749 stall_ms=180000 runtime="bare-metal"
+INFO [              slots_idle] all slots are idle | tid="22976" timestamp=1795432749
+INFO [     process_single_task] slot data | tid="22976" timestamp=1795432749 id_task=1 n_idle_slots=1 n_processing_slots=0
+INFO [      log_server_request] request | tid="21784" timestamp=1795432749 remote_addr="127.0.0.1" remote_port=65297 status=200 method="GET" path="/health" params={}
+INFO [     process_single_task] slot data | tid="22976" timestamp=1795432749 id_task=2 n_idle_slots=1 n_processing_slots=0
+INFO [      log_server_request] request | tid="10436" timestamp=1795432749 remote_addr="127.0.0.1" remote_port=65298 status=200 method="GET" path="/health" params={}
+INFO [     process_single_task] slot data | tid="22976" timestamp=1795432749 id_task=3 n_idle_slots=1 n_processing_slots=0
+INFO [      log_server_request] request | tid="22204" timestamp=1795432749 remote_addr="127.0.0.1" remote_port=65299 status=200 method="GET" path="/health" params={}
+INFO [     process_single_task] slot data | tid="22976" timestamp=1795432749 id_task=0 n_idle_slots=1 n_processing_slots=0
+INFO [      log_server_request] request | tid="1760" timestamp=1795432749 remote_addr="127.0.0.1" remote_port=65296 status=200 method="GET" path="/health" params={}
+INFO [     process_single_task] slot data | tid="22976" timestamp=1795432749 id_task=4 n_idle_slots=1 n_processing_slots=0
+INFO [              slots_idle] all slots are idle | tid="22976" timestamp=1795432749
+INFO [      log_server_request] request | tid="15568" timestamp=1795432749 remote_addr="127.0.0.1" remote_port=65295 status=200 method="GET" path="/health" params={}
+======== Prompt cache: cache size: 0, n_keep: 0, n_discarded_prompt: 0, cache_ram_n_min: 0, f_keep: 0.00, cache_ram_similarity: 0.50
+INFO [   launch_slot_with_task] slot is processing task | tid="22976" timestamp=1795432749 id_slot=0 id_task=5
+======== Cache: cache_size = 0, n_past0 =  0, n_past1 =  0, n_past_prompt1 = 0,  n_past2 =  0, n_past_prompt2 =  0
+INFO [    batch_pending_prompt] kv cache rm [p0, end) | tid="22976" timestamp=1795432749 id_slot=0 id_task=5 p0=0
+pxa_reserve_real_graph: reserved the real-path graph at n_tokens = 512, n_kv = 16384 (nodes = 2619, n_outputs = 0, token batch, reserve #1 on this context)
+PXA_PXQ_INT8_PREFILL: mode 1 (N13 dp4a int8 MMQ-tile prefill, sm_61 only; s8 book snap — NOT bit-exact vs fused fp16, G3-gated)
+PXA_FA_TILE_F32ACC: ENGAGED (tile-f16 FA, fp32 kqmax/kqsum/VKQ accumulators, smem staging unchanged)
+slot create_check: id  0 | task 5 | created context checkpoint 1 of 32 (pos_min = 1023, pos_max = 1023, n_tokens = 1024, size = 62.822 MiB, took 23.80 ms)
+INFO [    batch_pending_prompt] kv cache rm [p0, end) | tid="22976" timestamp=1795432750 id_slot=0 id_task=5 p0=1024
+slot create_check: id  0 | task 5 | created context checkpoint 2 of 32 (pos_min = 1308, pos_max = 1308, n_tokens = 1309, size = 62.824 MiB, took 33.59 ms)
+INFO [    batch_pending_prompt] kv cache rm [p0, end) | tid="22976" timestamp=1795432751 id_slot=0 id_task=5 p0=1309
+pxa_gslot_new_verify: PXA_VERIFY_GRAPH_CACHE: graph slot for verify width 5 created
+PXA_SPEC_FRESH_TABLE: ON (each generation starts from an empty n-gram table; =0 keeps it warm across requests)
+begin: ngram_mod occupancy = 74/4194304 (0.00)
+slot print_timing: id  0 | task 5 | 
+prompt eval time =    1458.09 ms /  1314 tokens (    1.11 ms per token,   901.18 tokens per second)
+       eval time =    1927.56 ms /   128 tokens (   15.06 ms per token,    66.41 tokens per second)
+      total time =    3385.64 ms /  1442 tokens
+statistics ngram_mod: #calls(b,g,a) = 1 125 0, #gen drafts = 0, #acc drafts = 0, #gen tokens = 0, #acc tokens = 0, dur(b,g,a) = 0.050, 0.210, 0.000 ms | empty = 125, below floor = 0, ctx0 = 0, observed = 0, miss@0 = 125, short<n_min = 0, ctx<n = 0, feeds = 124, lag(sum,max) = 124 1, untested = 0
+INFO [      log_server_request] request | tid="19536" timestamp=1795432753 remote_addr="127.0.0.1" remote_port=65300 status=200 method="POST" path="/v1/chat/completions" params={}
+PXA kv span: seq=0 n_cache=1441 n_cells=1441 pos_lo=0 pos_hi=1440
+slot create_check: id  0 | task 5 | created context checkpoint 3 of 32 (pos_min = 1440, pos_max = 1440, n_tokens = 1441, size = 62.825 MiB, took 35.30 ms)
+INFO [           release_slots] slot released | tid="22976" timestamp=1795432753 id_slot=0 id_task=5 n_ctx=16384 n_past=1441 n_system_tokens=0 n_cache_tokens=1441 truncated=false
+INFO [              slots_idle] all slots are idle | tid="22976" timestamp=1795432753
+======== Prompt cache: cache size: 1441, n_keep: 0, n_discarded_prompt: 0, cache_ram_n_min: 0, f_keep: 0.91, cache_ram_similarity: 0.50
+INFO [   launch_slot_with_task] slot is processing task | tid="22976" timestamp=1795432755 id_slot=0 id_task=136
+======== Cache: cache_size = 1441, n_past0 =  1314, n_past1 =  1314, n_past_prompt1 = 1314,  n_past2 =  1314, n_past_prompt2 =  1314
+Common part does not match fully
+cache : assistant
+<think>
+The user wants a concise three‑sentence summary of the material. The material repeatedly emphasizes two points: (1) AI is widely
+prompt: assistant
+<think>
+
+slot apply_checkp: id  0 | task 136 | n_past = 1314, slot.prompt.tokens.size() = 1441, seq_id = 0, pos_min = 1440, state_pos = 1440
+slot apply_checkp: id  0 | task 136 | restored HYBRID context checkpoint took 8.78 ms (state_pos 1440 -> 1308, n_past = 1309, size = 62.824 MiB)
+slot apply_checkp: id  0 | task 136 | erased invalidated context checkpoint (pos_min = 1440, pos_max = 1440, size = 62.825 MiB)
+INFO [    batch_pending_prompt] kv cache rm [p0, end) | tid="22976" timestamp=1795432755 id_slot=0 id_task=136 p0=1309
+begin: ngram_mod occupancy = 74/4194304 (0.00)
+slot create_check: id  0 | task 136 | created context checkpoint 3 of 32 (pos_min = 1314, pos_max = 1314, n_tokens = 1315, size = 62.824 MiB, took 27.03 ms)
+INFO [      log_server_request] request | tid="21528" timestamp=1795432757 remote_addr="127.0.0.1" remote_port=65302 status=200 method="POST" path="/v1/chat/completions" params={}
+slot print_timing: id  0 | task 136 | 
+prompt eval time =      44.54 ms /     5 tokens (    8.91 ms per token,   112.26 tokens per second)
+       eval time =    1949.44 ms /   128 tokens (   15.23 ms per token,    65.66 tokens per second)
+      total time =    1993.98 ms /   133 tokens
+statistics ngram_mod: #calls(b,g,a) = 2 250 0, #gen drafts = 0, #acc drafts = 0, #gen tokens = 0, #acc tokens = 0, dur(b,g,a) = 0.097, 0.431, 0.000 ms | empty = 250, below floor = 0, ctx0 = 0, observed = 0, miss@0 = 250, short<n_min = 0, ctx<n = 0, feeds = 248, lag(sum,max) = 248 1, untested = 0
+slot create_check: id  0 | task 136 | created context checkpoint 4 of 32 (pos_min = 1440, pos_max = 1440, n_tokens = 1441, size = 62.825 MiB, took 23.46 ms)
+PXA kv span: seq=0 n_cache=1441 n_cells=1441 pos_lo=0 pos_hi=1440
+INFO [           release_slots] slot released | tid="22976" timestamp=1795432757 id_slot=0 id_task=136 n_ctx=16384 n_past=1441 n_system_tokens=0 n_cache_tokens=1441 truncated=false
+INFO [              slots_idle] all slots are idle | tid="22976" timestamp=1795432757
