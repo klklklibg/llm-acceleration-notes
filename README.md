@@ -1,3 +1,5 @@
+> **已合并到 [P100 LLM Toolkit](https://github.com/klklklibg/p100-llm-toolkit)** — 本仓库保留作为历史存档，后续更新在 monorepo 的 `acceleration-notes/` 目录。
+
 # LLM 推理加速笔记：Tesla P100 (sm_60) 实测
 
 一份**只记录实测数字和负结果**的本地大模型推理加速笔记。所有结论来自同一台机器、同一套对照方法，不是从 benchmark 榜单抄来的。
